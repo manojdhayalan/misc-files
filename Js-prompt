@@ -1,0 +1,162 @@
+1. Command Injection
+Prompt: "Identify potential command injection vulnerabilities in my Node.js project, focusing on user-supplied inputs passed to functions like exec(), spawn(), fork(), or shelljs.exec(). Highlight instances where unsanitized input may lead to command execution."
+Explanation: Command injection occurs when an application improperly processes user input, allowing execution of arbitrary shell commands. Look for direct usage of user-controlled input in functions like child_process.exec() without validation.
+2. Insecure Deserialization
+Prompt: "Scan my Node.js project for insecure deserialization vulnerabilities, identifying areas where JSON.parse(), eval(), or third-party serializers like serialize-javascript are used to process untrusted input without validation."
+Explanation: Improper deserialization of user-controlled data can lead to remote code execution or denial-of-service attacks. Identify instances where JSON or other serialized data is parsed without strong validation.
+3. Insecure Direct Object Reference (IDOR)
+Prompt: "Detect instances of Insecure Direct Object Reference in my Node.js code, particularly in API endpoints where user-controlled input accesses database records without permission checks."
+Explanation: IDOR occurs when attackers can access restricted resources by modifying input (e.g., GET /user/123 to GET /user/124). Look for endpoints that use direct database queries without authentication or authorization enforcement.
+4. Secrets Exposure
+Prompt: "Identify hardcoded secrets in my Node.js repository, such as API keys, database credentials, encryption keys, or environment variable misuse."
+Explanation: Secrets exposure can lead to unauthorized access. Review process.env, .env files, hardcoded credentials in source code, and accidental logging of sensitive data.
+5. Server-Side Request Forgery (SSRF)
+Prompt: "Check my Node.js project for SSRF vulnerabilities where user-supplied input is used to make external requests via axios, fetch, http.request(), or similar functions without validation."
+Explanation: SSRF allows attackers to manipulate server-side requests to internal systems. Identify cases where URLs are constructed dynamically from user input and validate allowed domains strictly.
+6. SQL Injection
+Prompt: "Find SQL injection risks in my Node.js project, especially where user input is concatenated into SQL queries using libraries like mysql, pg, or sequelize without parameterization."
+Explanation: SQL injection happens when user-controlled input is embedded in queries. Use parameterized queries (? or $1 notation) to prevent direct injection.
+7. Cross-Site Scripting (XSS)
+Prompt: "Locate potential XSS vulnerabilities in my Node.js project, focusing on improper handling of user-generated HTML content in frameworks like express, react, or handlebars."
+Explanation: XSS occurs when unescaped user input is rendered as HTML. Identify unescaped outputs (res.send(userInput), innerHTML = userInput) and enforce proper encoding.
+8. Client-Side Request Forgery (CSRF)
+Prompt: "Detect CSRF vulnerabilities in my Node.js web application, identifying forms or API requests lacking anti-CSRF tokens (csurf middleware)."
+Explanation: CSRF allows attackers to perform unauthorized actions using a victim’s session. Verify whether CSRF protection mechanisms (tokens, header validation) are enforced.
+9. XML Entities Injection
+Prompt: "Scan my Node.js project for XML external entity (XXE) injection risks, particularly in XML parsing libraries (xml2js, fast-xml-parser) used with untrusted input."
+Explanation: XXE allows attackers to inject external entities that can access sensitive files or internal services. Disable DOCTYPE parsing in XML libraries to prevent exposure.
+Let me know if you need additional details or deeper insights into mitigation techniques! 🚀
+
+
+
+--------
+
+1. Command Injection
+Prompt:
+"Analyze this Node.js code for command injection vulnerabilities. Highlight any instances where user input is passed to system commands (e.g., through exec, spawn, or child_process) without proper sanitization or validation. Suggest safer alternatives or input validation techniques."
+
+Explanation:
+Command injection occurs when untrusted user input is executed as a command by the operating system. In Node.js, this often happens when user input is directly concatenated into shell commands using modules like child_process. Look for code like exec('ls ' + userInput).
+
+How to Identify:
+
+Search for usage of child_process.exec, execSync, spawn, etc.
+
+Check if any user-controlled data is directly included in the command string.
+
+Lack of input validation/sanitization is a red flag.
+
+2. Insecure Deserialization
+Prompt:
+"Review this Node.js code for insecure deserialization vulnerabilities. Identify any code that deserializes data from untrusted sources (e.g., using JSON.parse, eval, or third-party libraries). Explain the risks and suggest secure deserialization practices."
+
+Explanation:
+Insecure deserialization happens when data from untrusted sources is deserialized without validation, potentially allowing attackers to execute arbitrary code or manipulate application logic.
+
+How to Identify:
+
+Look for JSON.parse, eval, or similar functions that process user-supplied data.
+
+Check if the source of the data is untrusted (e.g., request body, cookies).
+
+Ensure there is validation or schema enforcement before deserialization.
+
+3. Insecure Direct Object Reference (IDOR)
+Prompt:
+"Scan this Node.js code for insecure direct object reference (IDOR) vulnerabilities. Identify places where user input is used to directly access objects, files, or database records without proper authorization checks."
+
+Explanation:
+IDOR occurs when an application exposes internal objects (like files or database records) via user-supplied input, without verifying the user's authorization.
+
+How to Identify:
+
+Look for endpoints where user input (e.g., IDs in URLs or request bodies) is used to fetch or modify resources.
+
+Check if there are sufficient authorization checks to ensure the user can access the requested resource.
+
+4. Secrets Exposure
+Prompt:
+"Analyze this Node.js codebase for accidental exposure of secrets, such as API keys, passwords, or tokens. Highlight any hard-coded secrets or cases where sensitive data could be logged or leaked."
+
+Explanation:
+Secrets exposure refers to sensitive information being accessible in code, logs, or error messages, which can be exploited if leaked.
+
+How to Identify:
+
+Search for hard-coded strings that resemble secrets (API keys, passwords).
+
+Check if sensitive information is logged or returned in error responses.
+
+Ensure secrets are loaded from secure environment variables, not code.
+
+5. Server-Side Request Forgery (SSRF)
+Prompt:
+"Review this Node.js code for potential server-side request forgery (SSRF) vulnerabilities. Identify any code that makes HTTP requests based on user input, and check if there are validations to prevent access to internal or sensitive endpoints."
+
+Explanation:
+SSRF occurs when an attacker manipulates the server to make requests to unintended locations, potentially exposing internal resources.
+
+How to Identify:
+
+Look for HTTP requests (http.request, axios, fetch, etc.) using user-supplied URLs.
+
+Check if there are filters or validations to prevent requests to internal IPs or sensitive endpoints.
+
+6. SQL Injection
+Prompt:
+"Analyze this Node.js code for SQL injection vulnerabilities. Identify any instances where user input is used in SQL queries without parameterization or escaping. Suggest ways to use parameterized queries or ORM methods."
+
+Explanation:
+SQL injection happens when untrusted input is included in SQL queries, allowing attackers to execute arbitrary SQL commands.
+
+How to Identify:
+
+Look for SQL queries constructed using string concatenation with user input.
+
+Ensure the use of parameterized queries or ORM query methods that separate data from code.
+
+7. Cross Site Scripting (XSS)
+Prompt:
+"Check this Node.js code for cross-site scripting (XSS) vulnerabilities. Identify any places where user input is rendered into HTML without proper escaping or sanitization. Suggest secure rendering methods."
+
+Explanation:
+XSS occurs when user input is rendered into web pages without escaping, allowing attackers to inject malicious scripts.
+
+How to Identify:
+
+Look for code that outputs user input to HTML using innerHTML or template literals.
+
+Ensure output is properly escaped or sanitized before rendering.
+
+8. Client-side Request Forgery (CSRF)
+Prompt:
+"Review this Node.js code for cross-site request forgery (CSRF) vulnerabilities. Identify endpoints that perform state-changing actions and check if they are protected by CSRF tokens or similar mechanisms."
+
+Explanation:
+CSRF allows attackers to trick users into submitting unwanted actions on a web application in which they are authenticated.
+
+How to Identify:
+
+Look for POST, PUT, DELETE endpoints that change state.
+
+Check if CSRF tokens or protections are implemented and validated.
+
+9. XML Entities Injection (XXE)
+Prompt:
+"Analyze this Node.js code for XML External Entity (XXE) injection vulnerabilities. Identify any XML parsing of user-supplied data and check if external entity resolution is disabled."
+
+Explanation:
+XXE occurs when XML parsers process external entities in user-supplied XML, potentially exposing sensitive data or enabling SSRF.
+
+How to Identify:
+
+Look for XML parsing libraries (xml2js, xmldom, etc.) processing user input.
+
+Check if external entity resolution is disabled in the parser configuration.
+
+General Prompt for Multiple Vulnerabilities
+If you want to check for all vulnerabilities at once:
+
+"Analyze this Node.js codebase for the following vulnerabilities: command injection, insecure deserialization, insecure direct object reference (IDOR), secrets exposure, server-side request forgery (SSRF), SQL injection, cross-site scripting (XSS), cross-site request forgery (CSRF), and XML entities injection (XXE). For each, highlight potential issues, explain the risk, and suggest secure coding practices."
+
+These prompts are designed to help you leverage GitHub Copilot or similar GenAI plugins to identify and understand critical security vulnerabilities in Node.js projects, with explanations and identification tips grounded in secure coding best practices.
