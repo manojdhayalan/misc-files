@@ -1,0 +1,187 @@
+Start with Project Scaffolding & Dependencies
+Prompt #1: Initialize Project
+
+Initialize a new full-stack application using React for the frontend and Express (Node.js) for the backend, connecting to MongoDB for persistence (use Mongoose for models).
+
+- Place frontend in `/client` directory and backend in `/server`.
+- Create separate `package.json` files for each.
+- Add `dotenv` to manage secrets.
+- Add `jest` and `react-testing-library` to frontend for tests.
+- Add `jest`, `supertest`, and `mongodb-memory-server` for backend tests.
+- Add ESLint and Prettier for code quality.
+- Configure gitignore to exclude node_modules, env files, and build artifacts.
+
+Make sure no credentials or secrets are committed to source control.
+2️⃣ Registration Component (React) + Secure API
+Prompt #2: Registration UI & API
+
+Create a React Registration component in `/client/src/components/Register.js`:
+
+- Form takes email and password.
+- Password input must have minLength=8.
+- No inline script in JSX (to defend against XSS).
+- On submit, calls `/api/auth/register` via POST.
+
+On backend:
+- In `/server/routes/auth.js`, create `/register` route.
+- Validate:
+  - Email must be valid (use npm validator).
+  - Password is minimum 8 chars.
+- Hash password with bcryptjs (min 10 salt rounds).
+- Store email and hashed password in `User` model (use Mongoose) with unique index on email.
+- Respond with generic success or error (to avoid user enumeration).
+
+Write unit tests in `/server/tests/auth.test.js` covering at least:
+- Successful registration.
+- Duplicate email error.
+- Password too short error.
+- Invalid email error.
+3️⃣ Login Component & Secure Auth
+Prompt #3: Login UI & API
+
+Create a React Login component in `/client/src/components/Login.js`:
+
+- Form with email, password.
+- On submit, POST to `/api/auth/login`.
+- No sensitive data stored in localStorage; use httpOnly cookies for tokens!
+
+On backend:
+- `/login` route in `/server/routes/auth.js`.
+- Validate email and password.
+- Lookup user by email, use bcrypt to compare password hash.
+- On successful login:
+    - Issue JWT token (random, secure secret using `crypto`).
+    - Sign JWT with strong secret from env variable.
+    - Set JWT as an httpOnly, Secure, SameSite=Strict cookie.
+
+User’s data is isolated using JWT’s userId.
+
+Write unit tests for login success, wrong password, and invalid email.
+Write test to ensure JWT cannot be guessed (unpredictable).
+4️⃣ Authorization Middleware (Protect User Data)
+Prompt #4: Secure Auth Middleware
+
+Create Express middleware `auth.js`:
+- Extract JWT from httpOnly cookie.
+- Verify JWT and set req.userId.
+- If invalid/missing, return 401.
+- All user-specific routes require this middleware to enforce ownership: no user should access another’s data (prevents IDOR).
+
+Write unit tests for access control.
+5️⃣ Todo Model with Ownership
+Prompt #5: Todo Mongoose Model
+
+Create a Mongoose model `Todo` in `/server/models/Todo.js`:
+- Fields: `title`(String, req), `description`(String), `completed`(Boolean, default false), `tags`([String]), `attachments`([String]), `owner`(ObjectId ref User, req).
+- Ensure all CRUD operations require `owner`=current user (from req.userId middleware).
+6️⃣ CRUD API for Todos with Secure Access
+Prompt #6: CRUD API
+
+In `/server/routes/todos.js`, create endpoints:
+
+- GET `/todos`      - List current user's todos
+- POST `/todos`     - Create new todo (title, description, tags: parse hashtags from input, completed=false)
+- PUT `/todos/:id`  - Update todo (user can only update their own; verify `owner==req.userId`)
+- DELETE `/todos/:id` - Only allow if `owner==req.userId`
+
+Sanitize input for XSS (strip tags).
+Prevent NoSQL injection by never using raw user input as a query.
+
+Unit test CRUD including denial for non-owners and edge cases for tags.
+7️⃣ Todo List Component (Dashboard Page)
+Prompt #7: Dashboard React Component
+
+Create `/client/src/components/Dashboard.js`:
+
+- Display all current user's todos with title, description, completed checkbox, tags as hashtags, download links if file attached.
+- Input form to add new Todo.
+- Each row: Update and Delete buttons, completed checkbox, and file upload (see next prompt).
+- Use CSS inspired by https://www.wellsfargo.com/ (e.g. cards, accent colors, clean layout).
+
+Unit test rendering, item addition, deletion, update, completion, tag display.
+8️⃣ Update Component
+Prompt #8: Update Todo Page
+
+Create `/client/src/components/UpdateTodo.js`:
+
+- Form to edit todo details (pre-populated), save on submit.
+- URL pattern: `/todos/:id/edit`.
+- Verify user can only update their own todo.
+- List/preview attached files.
+
+Unit test rendering, validation, edit and forbidden access.
+9️⃣ File Upload & Download (API & UI)
+Prompt #9: Secure File Upload
+
+Backend:
+- In todos route, POST `/todos/:id/attachments`, accept file upload via `multer`.
+- Restrict file types to `.txt` and `.pdf`.
+- Store in `/uploads` with owner/todo reference.
+- Link uploaded file(s) to todo.attachments array.
+- GET route to download: checks owner before serving file.
+
+Frontend:
+- Add file input to Dashboard and Update pages.
+- On upload, submit to backend and display download links.
+- Download links: only visible to owner.
+
+Test for secure file storage, download, reject forbidden types, and user isolation.
+🔟 Tag System in UI
+Prompt #10: Tags as Hashtags
+
+- In add/edit todo forms, allow entering tags (as space/comma separated or using hashtags).
+- Auto-display tags as #tagname in todo lists.
+- Store tags as lowercased strings for consistency.
+
+- Unit test tag parsing, rendering, and edge cases.
+
+Style tags similar to accent used for hyperlinks at https://www.wellsfargo.com/.
+1️⃣1️⃣ Export to CSV Functionality
+Prompt #11: CSV Export
+
+Backend:
+- GET `/todos/export/csv`: Responds with CSV (“title,description,completed,tags”) for current user’s todos.
+- CSV download is only available if authenticated as owner.
+
+Frontend:
+- Add “Export CSV” button in Dashboard.
+- Clicking downloads CSV for user’s todos.
+- Test for correct column labels/data, secure access.
+
+Prevent CSV injection by escaping commas, quotes, formulas.
+1️⃣2️⃣ Tag Filtering/Search
+Prompt #12: Tag Filter/Search
+
+- In Dashboard, add a search input to filter todos by tag name (input: “python” shows all todos with #python tag at top).
+- Search function should be case-insensitive and update todo list order dynamically.
+- Test for filtering, reordering, and non-matching results.
+1️⃣3️⃣ Secure Session & App Hardening
+Prompt #13: Security Hardening
+
+- Set up CORS policy (allow only the frontend origin).
+- Use helmet for secure headers.
+- CSRF protection:
+  - Use csurf express middleware.
+  - Pass CSRF token as cookie and fetch it via frontend before POST/PUT/DELETE.
+- Use strong session secrets, never hardcoded in code.
+- No template rendering with user-supplied data on server.
+- Sanitize all input. Never eval user data.
+- Use secure cookie settings: httpOnly, Secure, SameSite.
+- Lint and test to ensure neither secrets nor keys are present in the codebase.
+1️⃣4️⃣ Test Coverage & CI
+Prompt #14: Coverage + CI
+
+- Ensure all components, models, routes, and utils have Jest/unit tests.
+- Aim for at least 80% coverage, measured with coverage tools.
+- Add a test script to both client and server `package.json`.
+- Set up a simple GitHub Actions CI config:
+  - Runs `npm run test` in both client and server.
+  - Fails if coverage is below 80%.
+How to Use These Prompts
+Paste one prompt at a time into Copilot Chat or your AI code assistant.
+Review/generated code, and integrate; if needed, tweak or prompt for minor adjustments.
+Add your own refinements or corporate branding.
+Get the Most from These Prompts
+Be explicit about test coverage for every logic piece.
+Re-enforce security requirements repeatedly as above.
+Use copilot
